@@ -1,0 +1,18 @@
+{"joglist": [
+  {
+    "jog id": 1,
+    "distance ran": 1200,
+    "avg speed": 5,
+    "date of jog": "july:31",
+    "time taken": 4,
+    "avg heart rate": 78
+  },
+  {
+    "jog id": 2,
+    "distance ran": 3000,
+    "avg speed": 10,
+    "date of jog": "august:5",
+    "time taken": 5,
+    "avg heart rate": 82
+  }
+]}

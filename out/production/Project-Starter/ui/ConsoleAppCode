@@ -1,0 +1,226 @@
+package ui;
+
+import model.Jog;
+import model.JogList;
+import persistence.JsonReader;
+import persistence.JsonWriter;
+
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Scanner;
+
+//Jog Data Application
+public class JogDataApp {
+    private Scanner input;
+    private JogList jogList;
+    private int distanceRan;
+    private int timeTaken;
+    private double avgSpeed;
+    private int avgHeartRate;
+    private int jogId;
+    private String dateOfJog;
+
+    private static final String JSON_STORE = "./data/joglist.json";
+    private JsonWriter jsonWriter;
+    private JsonReader jsonReader;
+
+
+    //EFFECTS: initializes the input and jogList
+    private void setup() {
+        input = new Scanner(System.in);
+        input.useDelimiter("\n");
+        jogList = new JogList();
+        jsonWriter = new JsonWriter(JSON_STORE);
+        jsonReader = new JsonReader(JSON_STORE);
+    }
+
+    //EFFECTS: runs the jog data app
+    public JogDataApp() {
+        runJogDataApp();
+    }
+
+    // MODIFIES: this
+    // EFFECTS: processes user input
+    private void runJogDataApp() {
+        boolean runApp = true;
+        int command;
+
+        setup();
+
+        while (runApp) {
+            mainMenu();
+            command = input.nextInt();
+
+            if (command == 8) {
+                runApp = false;
+            } else {
+                processCommand(command);
+            }
+
+        }
+    }
+
+    // MODIFIES: this
+    // EFFECTS: processes user command
+    private void processCommand(int command) {
+        if (command == 1) {
+            doAddJog();
+        } else if (command == 2) {
+            doRemoveJog();
+        } else if (command == 3) {
+            doUpdateJog();
+        } else if (command == 4) {
+            System.out.println(doSearchAndDisplay());
+        } else if (command == 5) {
+            System.out.println("The number of data entries are: ");
+            System.out.println(jogList.jogListSize());
+        } else if (command == 6) {
+            saveJogList();
+        } else if (command == 7) {
+            loadJogList();
+        }
+    }
+
+    //MODIFIES: this
+    //EFFECTS: loads JogList from file
+    private void loadJogList() {
+        try {
+            jogList = jsonReader.read();
+            System.out.println("Loaded from " + JSON_STORE);
+        } catch (IOException e) {
+            System.out.println("Unable to read from file: " + JSON_STORE);
+        }
+    }
+
+    //EFFECTS: saves the JogList to file
+    private void saveJogList() {
+        try {
+            jsonWriter.open();
+            jsonWriter.write(jogList);
+            jsonWriter.close();
+            System.out.println("Saved to " + JSON_STORE);
+        } catch (FileNotFoundException e) {
+            System.out.println("Unable to write to file: " + JSON_STORE);
+        }
+    }
+
+    //MODIFIES: this
+    //EFFECTS: sets the values of jog and then adds it to jogList
+    private void doAddJog() {
+        initializeInputs();
+
+        Jog jog = new Jog(jogId);
+        jog.setDistanceRan(distanceRan);
+        jog.setTimeTaken(timeTaken);
+        jog.setAvgSpeed(avgSpeed);
+        jog.setAvgHeartRate(avgHeartRate);
+        jog.setDateOfJog(dateOfJog);
+
+        jogList.addJog(jog);
+
+    }
+
+    //MODIFIES: this
+    //EFFECTS: removes the jog of specified jogId
+    private void doRemoveJog() {
+        System.out.println("Enter jod Id of jog to be deleted: ");
+        jogId = input.nextInt();
+        jogList.removeJog(jogId);
+    }
+
+    //MODIFIES: this
+    //EFFECTS: updates the value of a field of Jog
+    private void doUpdateJog() {
+        System.out.println("Enter jog Id of the desired jog");
+        int jogId = input.nextInt();
+        Jog jog = jogList.searchJog(jogId);
+
+        printJogFields();
+        int command = input.nextInt();
+
+        if (command == 5) {
+            System.out.println("Enter new date of jog (month:date): ");
+            String temp = input.next();
+            jog.setDateOfJog(temp);
+        } else if (command == 3) {
+            System.out.println("Enter new value: ");
+            double temp = input.nextDouble();
+            jog.setAvgSpeed(temp);
+        } else {
+            updateIntField(jog, command);
+        }
+    }
+
+    //MODIFIES: this
+    //EFFECTS: updates the value of an int field of Jog
+    private void updateIntField(Jog jog, int command) {
+        int temp;
+        System.out.println("Enter new value: ");
+        temp = input.nextInt();
+
+        if (command == 1) {
+            jog.setDistanceRan(temp);
+        } else if (command == 2) {
+            jog.setTimeTaken(temp);
+        } else if (command == 4) {
+            jog.setAvgHeartRate(temp);
+        }
+    }
+
+    //EFFECTS: searches for the Jog of specified JogId and then displays it
+    private ArrayList doSearchAndDisplay() {
+        System.out.println("Enter jog Id of the desired jog");
+        int jogId = input.nextInt();
+
+        Jog jog = jogList.searchJog(jogId);
+
+        ArrayList valList = new ArrayList();
+        valList.add(jog.getDistanceRan());
+        valList.add(jog.getTimeTaken());
+        valList.add(jog.getAvgSpeed());
+        valList.add(jog.getAvgHeartRate());
+        valList.add(jog.getDateOfJog());
+
+        System.out.println("[distance, time, avg speed, avg heart rate, date]");
+        return valList;
+    }
+
+    //EFFECTS: prints the fields of Jog
+    private void printJogFields() {
+        System.out.println("1. Distance ran");
+        System.out.println("2. Time taken");
+        System.out.println("3. Average Speed");
+        System.out.println("4. Average Heart Rate");
+        System.out.println("5. Date of jog");
+    }
+
+    //EFFECTS: prints the menu of options to the user
+    private void mainMenu() {
+        System.out.println("\nSelect from:");
+        System.out.println("\t1. Add a jog data");
+        System.out.println("\t2. Delete a jog data");
+        System.out.println("\t3. Edit a jog data");
+        System.out.println("\t4. Search and display a jog data");
+        System.out.println("\t5. Number of jog data entries");
+        System.out.println("\t6. Save");
+        System.out.println("\t7. Load");
+        System.out.println("\t8. Quit");
+    }
+
+    //EFFECTS: takes the input values for all fields of Jog
+    private void initializeInputs() {
+        System.out.println("Enter jog Id: ");
+        jogId = input.nextInt();
+        System.out.println("Enter distance ran (in metres): ");
+        distanceRan = input.nextInt();
+        System.out.println("Enter time taken (in mins): ");
+        timeTaken = input.nextInt();
+        System.out.println("Enter average speed (in m/s): ");
+        avgSpeed = input.nextDouble();
+        System.out.println("Enter average heart rate (in bpm): ");
+        avgHeartRate = input.nextInt();
+        System.out.println("Enter date of jog (month:date): ");
+        dateOfJog = input.next();
+    }
+}
